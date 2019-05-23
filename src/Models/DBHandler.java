@@ -121,7 +121,7 @@ public class DBHandler implements IDBHandler
                 details.FirstName = results.getString("FIRST_NAME");
                 details.LastName = results.getString("LAST_NAME");
                 details.Email = results.getString("EMAIL");
-                details.Email = results.getString("PHONE");
+                details.Phone = results.getString("PHONE");
                 statement.close();
                 return details;
             }
@@ -145,34 +145,32 @@ public class DBHandler implements IDBHandler
 
     public ArrayList<String> CheckUser(String p_userName, String p_password)
     {
-        String query = "Select IS_CONNECTED 'connection', CLASSIFICATION 'type' FROM persons WHERE USERNAME = '" + p_userName + "' AND PASSWORD = '"+ p_password +"'";
+        String query = "Select IS_CONNECTED as 'connection', CLASSIFICATION as 'type' FROM persons WHERE USERNAME = '" + p_userName + "' AND PASSWORD = '"+ p_password +"'";
         ResultSet result = executeQuery(query);
+        ArrayList<String> msg = new ArrayList<>();
         try {
             if(result == null)
             {
-                return new ArrayList<String>(){
-                    {
-                        add("login");
-                        add("failure");
-                        add("Username or password was invalid.");
-                    }};
+                msg.add("login");
+                msg.add("failure");
+                msg.add("Username or password was invalid.");
+
+                return msg;
             }
             else if(result.getBoolean("connection"))
             {
-                return new ArrayList<String>(){
-                    {
-                        add("login");
-                        add("failure");
-                        add("User is already logged in.");
-                    }};
+                msg.add("login");
+                msg.add("failure");
+                msg.add("User is already logged in.");
+                return msg;
             }
             else{
-                return new ArrayList<String>(){
-                    {
-                        add("login");
-                        add("success");
-                        add(Integer.toString(result.getInt("type")));
-                    }};
+
+                msg.add("login");
+                msg.add("success");
+                msg.add(Integer.toString(result.getInt("type")));
+                LogInUser(p_userName);
+                return msg;
             }
         }
         catch (SQLException se) {
@@ -180,21 +178,17 @@ public class DBHandler implements IDBHandler
             System.out.println("SQLException: " + se.getMessage());
             System.out.println("SQLState: " + se.getSQLState());
             System.out.println("VendorError: " + se.getErrorCode());
-            return new ArrayList<String>() {
-                {
-                    add("login");
-                    add("failure");
-                    add("Connection problem.");
-                }};
+            msg.add("login");
+            msg.add("failure");
+            msg.add("Connection problem.");
+            return msg;
         }
         catch (Exception e) {
             e.printStackTrace();
-            return new ArrayList<String>(){
-                {
-                    add("login");
-                    add("failure");
-                    add("Connection problem.");
-                }};
+            msg.add("login");
+            msg.add("failure");
+            msg.add("Connection problem.");
+            return msg;
         }
     }
 
@@ -237,13 +231,13 @@ public class DBHandler implements IDBHandler
         return false;
     }
 
-    public boolean LogInUser(String p_userName, String p_userPassword)
+    private boolean LogInUser(String p_userName)
     {
         String query = "UPDATE persons SET IS_CONNECTED = 1 WHERE USERNAME = '"+ p_userName +"'";
         return executeUpdate(query);
     }
 
-    public boolean LogOutUser(String p_userName, String p_userPassword)
+    private boolean LogOutUser(String p_userName)
     {
         String query = "UPDATE persons SET IS_CONNECTED = 0 WHERE USERNAME = '"+ p_userName +"'";
         return executeUpdate(query);
@@ -257,15 +251,16 @@ public class DBHandler implements IDBHandler
     {
         try
         {
+            ResultSet output = null;
             PreparedStatement statement = m_connection.prepareStatement(p_query);
             ResultSet results = statement.executeQuery();
-            statement.close();
             if (results.next())
             {
                 return results;
             }
             else
             {
+                statement.close();
                 return null;
             }
         }

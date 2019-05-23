@@ -1,5 +1,7 @@
 package Models.Interfaces;
 
+import java.util.ArrayList;
+
 public interface IDBHandler
 {
     //region Methods
@@ -15,5 +17,5 @@ public interface IDBHandler
     void IncreaseNumOfPurchases(String p_userName, int p_value);
     IClientDetails GetClientDetails(String p_userName);
     boolean IsUsernameExists(String p_username, String p_password);
-
+    ArrayList<String> CheckUser(String p_userName, String p_password);
 }
